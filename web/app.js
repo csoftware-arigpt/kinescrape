@@ -1028,35 +1028,23 @@ function extractCandidatesFromSource(source, baseUrl = "") {
 }
 
 function collectCandidatesFromHtml(html, baseUrl, candidates) {
-  const parsed = new DOMParser().parseFromString(html, "text/html");
-  const selectors = [
-    "a[href]",
-    "iframe[src]",
-    "script[src]",
-    "source[src]",
-    "video[src]",
-    "[data-kinescope-id]",
-    "[data-video-id]",
-    "[data-id]",
-  ];
+  const attrPattern = /(href|src|data-kinescope-id|data-video-id|data-id)\s*=\s*["']([^"']+)["']/gi;
+  for (const match of String(html).matchAll(attrPattern)) {
+    const attribute = match[1].toLowerCase();
+    const value = match[2];
+    if (!value) {
+      continue;
+    }
 
-  for (const element of parsed.querySelectorAll(selectors.join(","))) {
-    for (const attribute of ["href", "src", "data-kinescope-id", "data-video-id", "data-id"]) {
-      const value = element.getAttribute(attribute);
-      if (!value) {
-        continue;
-      }
-
-      const resolved = resolveMaybeUrl(value, baseUrl);
-      const videoId = inferVideoIdFromValue(resolved || value);
-      if (videoId) {
-        candidates.push({
-          label: labelForCandidate(videoId, resolved || value),
-          source: attribute,
-          url: resolved || value,
-          videoId,
-        });
-      }
+    const resolved = resolveMaybeUrl(value, baseUrl);
+    const videoId = inferVideoIdFromValue(resolved || value);
+    if (videoId) {
+      candidates.push({
+        label: labelForCandidate(videoId, resolved || value),
+        source: attribute,
+        url: resolved || value,
+        videoId,
+      });
     }
   }
 }
@@ -1141,7 +1129,7 @@ function hlsManifestUrlsFromText(text) {
 }
 
 function decodeEmbeddedUrl(value) {
-  return value.replaceAll("\\u0026", "&").replaceAll("&amp;", "&");
+  return String(value).replace(/&amp;|\\u0026/g, "&");
 }
 
 function labelForCandidate(videoId, url) {
@@ -1173,7 +1161,13 @@ function inferVideoIdFromValue(value) {
 }
 
 function looksLikeHtml(value) {
-  return /<[a-z][\s\S]*>/i.test(value);
+  return /<[a-zA-Z][a-zA-Z0-9]*[\s>/]/.test(value);
+}
+
+function isKinescopeHost(hostname) {
+  if (!hostname) return false;
+  const host = String(hostname).toLowerCase().replace(/\.+$/, "");
+  return host === "kinescope.io" || host.endsWith(".kinescope.io");
 }
 
 function isSingleRemotePageUrl(value) {
@@ -1181,7 +1175,7 @@ function isSingleRemotePageUrl(value) {
   if (!isHttpUrl(trimmed)) return false;
 
   const url = new URL(trimmed);
-  if (!url.hostname.endsWith("kinescope.io")) return true;
+  if (!isKinescopeHost(url.hostname)) return true;
 
   const firstPart = url.pathname.split("/").find(Boolean) || "";
   if (KINESCOPE_RESERVED_IDS.has(firstPart)) return false;
@@ -1242,7 +1236,7 @@ function inferVideoIdFromUrl(url) {
     }
   }
 
-  if (!url.hostname.endsWith("kinescope.io")) {
+  if (!isKinescopeHost(url.hostname)) {
     return "";
   }
 
@@ -1322,18 +1316,35 @@ function inferManifestType(url, text = "") {
 }
 
 async function fetchText(url, referer) {
+  const safeUrl = assertKinescopeUrl(url);
   let response;
   try {
-    response = await fetch(url, makeFetchOptions(referer));
+    response = await fetch(safeUrl, makeFetchOptions(referer));
   } catch (error) {
-    throw new Error(`Browser fetch failed for ${url}. CORS or referer policy may block this request. ${error.message}`);
+    throw new Error(`Browser fetch failed for ${safeUrl}. CORS or referer policy may block this request. ${error.message}`);
   }
 
   if (!response.ok) {
-    throw new Error(`Request failed with HTTP ${response.status} for ${url}`);
+    throw new Error(`Request failed with HTTP ${response.status} for ${safeUrl}`);
   }
 
   return response.text();
+}
+
+function assertKinescopeUrl(value) {
+  let parsed;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new Error("Invalid URL.");
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    throw new Error("Only HTTP(S) URLs are allowed.");
+  }
+  if (!isKinescopeHost(parsed.hostname)) {
+    throw new Error("Only Kinescope URLs are allowed for browser-side fetches.");
+  }
+  return parsed.toString();
 }
 
 async function fetchJson(url, referer, body) {

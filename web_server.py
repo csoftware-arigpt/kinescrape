@@ -940,8 +940,7 @@ def should_fetch_source_page(source: str) -> bool:
         return False
 
     parsed = urlparse(source)
-    hostname = parsed.hostname or ""
-    if not hostname.endswith("kinescope.io"):
+    if not is_kinescope_host(parsed.hostname):
         return True
 
     first_part = next((part for part in parsed.path.split("/") if part), "")
@@ -1022,7 +1021,7 @@ def infer_video_id_from_url(parsed_url) -> str:
         if is_valid_video_id(value):
             return value
 
-    if not parsed_url.hostname or not parsed_url.hostname.endswith("kinescope.io"):
+    if not is_kinescope_host(parsed_url.hostname):
         return ""
 
     parts = [part for part in parsed_url.path.split("/") if part and part not in KINESCOPE_RESERVED_IDS]
@@ -1107,7 +1106,7 @@ def resolve_maybe_url(value: str, base_url: str) -> str:
 
 
 def looks_like_html(value: str) -> bool:
-    return bool(re.search(r"<[a-z][\s\S]*>", value, re.IGNORECASE))
+    return bool(re.search(r"<[a-zA-Z][a-zA-Z0-9]*[\s>/]", value))
 
 
 def is_http_url(value: str) -> bool:
@@ -1153,7 +1152,7 @@ def fetch_signed_manifest_from_share_page(video_id: str, referer: str) -> dict[s
 
 def fetch_manifest_url(url: str, referer: str) -> dict[str, str]:
     parsed = validate_http_url(url)
-    if not parsed.hostname or not parsed.hostname.endswith("kinescope.io"):
+    if not is_kinescope_host(parsed.hostname):
         raise ApiError(HTTPStatus.BAD_REQUEST, "Only Kinescope manifest URLs are supported.")
 
     text = fetch_text(url, referer or DEFAULT_REFERER)
@@ -1260,6 +1259,13 @@ def validate_http_url(url: str):
     return parsed
 
 
+def is_kinescope_host(hostname: str | None) -> bool:
+    if not hostname:
+        return False
+    host = hostname.lower().rstrip(".")
+    return host == "kinescope.io" or host.endswith(".kinescope.io")
+
+
 def validate_public_http_url(url: str):
     parsed = validate_http_url(url)
     hostname = parsed.hostname
@@ -1273,6 +1279,10 @@ def validate_public_http_url(url: str):
         port = parsed.port or (443 if parsed.scheme == "https" else 80)
     except ValueError as error:
         raise ApiError(HTTPStatus.BAD_REQUEST, "Invalid URL port.") from error
+
+    if port not in {80, 443}:
+        raise ApiError(HTTPStatus.BAD_REQUEST, "Only standard HTTP/HTTPS ports are allowed.")
+
     try:
         addresses = socket.getaddrinfo(hostname, port, type=socket.SOCK_STREAM)
     except socket.gaierror as error:
