@@ -1259,8 +1259,8 @@ def validate_http_url(url: str):
     return parsed
 
 
-ALLOWED_PROXY_HOST_EXACT = frozenset({"kinescope.io"})
-ALLOWED_PROXY_HOST_SUFFIXES = (".kinescope.io",)
+ALLOWED_PROXY_HOST_EXACT = frozenset({"kinescope.io", "kinescopecdn.net"})
+ALLOWED_PROXY_HOST_SUFFIXES = (".kinescope.io", ".kinescopecdn.net")
 
 
 def is_kinescope_host(hostname: str | None) -> bool:
