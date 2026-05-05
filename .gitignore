@@ -1,0 +1,10 @@
+.idea
+venv
+build
+dist
+**/__pycache__/
+temp
+ffmpeg.exe
+mp4decrypt.exe
+.omx/
+.codex

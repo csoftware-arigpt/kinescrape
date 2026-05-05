@@ -1,0 +1,12 @@
+.git
+.omx
+.codex
+__pycache__/
+**/__pycache__/
+*.pyc
+venv/
+build/
+dist/
+temp/
+ffmpeg.exe
+mp4decrypt.exe

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Kinescrape">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#181818"/>
+      <stop offset="1" stop-color="#050505"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#68e8c4"/>
+      <stop offset="1" stop-color="#4f9cff"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <g transform="translate(2 0)">
+    <path d="M13 13 L22 13 L22 29 L41 13 L51 13 L30 32 L51 51 L41 51 L22 35 L22 51 L13 51 Z" fill="#ffffff"/>
+    <path d="M34 24 L48 32 L34 40 Z" fill="url(#accent)"/>
+  </g>
+</svg>

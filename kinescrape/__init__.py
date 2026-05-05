@@ -1,0 +1,2 @@
+from kinescrape.kinescope import KinescopeVideo
+from kinescrape.downloader import VideoDownloader as KinescopeDownloader

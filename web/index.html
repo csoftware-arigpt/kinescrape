@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Kinescrape · Save Kinescope videos</title>
+  <meta name="description" content="Pull any Kinescope video into a clean MP4 file. Audio and video combined, batch ZIP, no server storage">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <img src="./favicon.svg" alt="" width="28" height="28">
+      </span>
+      <span class="brand-name">Kinescrape</span>
+    </div>
+    <div class="topbar-actions">
+      <button id="langToggle" class="link-btn" type="button" aria-label="Toggle language" data-i18n="lang.toggle">EN</button>
+      <a class="link-btn" href="https://github.com/csoftware-arigpt/kinescrape" target="_blank" rel="noopener" aria-label="Source code">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path fill="currentColor" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.12-1.47-1.12-1.47-.91-.62.07-.61.07-.61 1.01.07 1.54 1.04 1.54 1.04.9 1.53 2.36 1.09 2.94.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02A9.5 9.5 0 0 1 12 6.8c.85 0 1.71.11 2.51.34 1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/>
+        </svg>
+      </a>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <div class="kicker" data-i18n="hero.kicker">The fastest way to grab Kinescope videos</div>
+      <h1>
+        <span data-i18n="hero.h1.a">Pull any video</span>
+        <em data-i18n="hero.h1.b">out of Kinescope</em>
+      </h1>
+      <p class="lede" data-i18n="hero.lede">Paste a link — get a clean MP4. No extra uploads, no signup</p>
+    </section>
+
+    <section class="hero-input">
+      <form id="downloadForm" autocomplete="off">
+        <textarea id="sourceInput" name="source" hidden></textarea>
+        <div class="input-stack">
+          <div class="paste-row">
+            <input id="urlInput" type="text"
+                   data-i18n-placeholder="input.placeholder"
+                   placeholder="Paste link, embed code, or page HTML"
+                   autocomplete="off" spellcheck="false"
+                   enterkeyhint="go" inputmode="url">
+            <button id="pasteButton" class="icon-button" type="button"
+                    data-i18n-title="btn.paste" data-i18n-aria-label="btn.paste" title="Paste">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M9 4h6a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h2V5a1 1 0 0 1 1-1Zm0 2v2h6V6"/>
+              </svg>
+            </button>
+          </div>
+          <div class="action-row">
+            <button id="inspectButton" class="btn btn--secondary" type="button" data-i18n="btn.find">Find</button>
+            <button id="downloadButton" class="btn btn--primary" type="submit" disabled>
+              <span data-i18n="btn.get">Get video</span>
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12l7 7 7-7M12 19V3"/>
+              </svg>
+            </button>
+          </div>
+          <div class="hint" id="hintLine" data-i18n="input.tip">Paste any Kinescope link, embed code, or full page HTML — multiple links are detected automatically</div>
+        </div>
+      </form>
+
+      <ul class="trust-strip" aria-label="Trust signals">
+        <li>
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/></svg>
+          <span data-i18n="trust.privacy">no server storage</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 12l5-5h8l5 5v6H3v-6zM7 18v3M17 18v3"/></svg>
+          <span data-i18n="trust.batch">don't save your videos</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <span data-i18n="trust.free">multi-link support</span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="card card--list" id="chooseCard" hidden>
+      <header class="card-head">
+        <h2 data-i18n="found.title">Found videos</h2>
+        <span class="pill" id="candidateCount">—</span>
+      </header>
+      <div class="candidate-list" id="candidateList" role="group"></div>
+    </section>
+
+    <section class="card card--quality" id="qualityCard" hidden>
+      <header class="card-head">
+        <h2 data-i18n="quality.title">Quality</h2>
+        <span class="meta-sub" id="qualityMeta" data-i18n="quality.meta">audio + video combined</span>
+      </header>
+      <div class="quality-pills" id="qualityPills" role="radiogroup"></div>
+      <select id="qualitySelect" class="visually-hidden" aria-hidden="true" tabindex="-1"></select>
+      <select id="candidateSelect" class="visually-hidden" aria-hidden="true" tabindex="-1"></select>
+    </section>
+
+    <section class="card card--progress" id="progressCard" hidden>
+      <header class="progress-head">
+        <div class="progress-title">
+          <h2 id="stageText" data-i18n="stage.preparing">Getting ready</h2>
+          <span class="progress-current" id="progressCurrent"></span>
+        </div>
+        <div class="progress-stats">
+          <div class="stat">
+            <span class="stat-label" data-i18n="stat.speed">Speed</span>
+            <span class="stat-value tabular" id="speedText">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label" data-i18n="stat.eta">ETA</span>
+            <span class="stat-value tabular" id="etaText">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label" data-i18n="stat.progress">Progress</span>
+            <span class="stat-value tabular" id="percentText">0%</span>
+          </div>
+        </div>
+      </header>
+      <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <ol class="steps" id="steps">
+        <li data-step="find"><span class="dot"></span><span data-i18n="step.find">Find</span></li>
+        <li data-step="download"><span class="dot"></span><span data-i18n="step.download">Download</span></li>
+        <li data-step="combine"><span class="dot"></span><span data-i18n="step.combine">Combine</span></li>
+        <li data-step="done"><span class="dot"></span><span data-i18n="step.save">Save</span></li>
+      </ol>
+    </section>
+
+    <section class="card card--result" id="resultCard" hidden>
+      <header class="card-head">
+        <div class="result-title">
+          <span class="badge badge--success" data-i18n="result.kicker">Ready</span>
+          <h2 id="resultTitle">—</h2>
+        </div>
+        <a id="downloadLink" class="btn btn--primary" hidden>
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+            <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12l7 7 7-7M12 19V3"/>
+          </svg>
+          <span data-i18n="btn.save">Save MP4</span>
+        </a>
+      </header>
+      <div class="result-body">
+        <video id="previewVideo" controls playsinline></video>
+      </div>
+    </section>
+
+    <details class="advanced">
+      <summary>
+        <span data-i18n="advanced.title">Advanced</span>
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" class="chev">
+          <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+        </svg>
+      </summary>
+      <div class="advanced-grid">
+        <label class="adv-field">
+          <span data-i18n="advanced.filename">File name</span>
+          <input id="filenameInput" name="filename" value="kinescope-video.mp4">
+        </label>
+        <label class="adv-field">
+          <span data-i18n="advanced.referer">Referer</span>
+          <input id="refererInput" name="referer" autocomplete="url" placeholder="https://example.com">
+        </label>
+      </div>
+      <details class="advanced advanced--nested">
+        <summary data-i18n="advanced.log">Process log</summary>
+        <pre id="logOutput" aria-label="Process log"></pre>
+        <div class="hidden-meters" aria-hidden="true">
+          <progress id="manifestProgress" max="100" value="0"></progress><strong id="manifestLabel"></strong>
+          <progress id="videoProgress" max="100" value="0"></progress><strong id="videoLabel"></strong>
+          <progress id="audioProgress" max="100" value="0"></progress><strong id="audioLabel"></strong>
+          <progress id="ffmpegProgress" max="100" value="0"></progress><strong id="ffmpegLabel"></strong>
+          <span id="runtimeStatus"></span><span id="videoIdValue"></span><span id="trackValue"></span><span id="encryptionValue"></span>
+        </div>
+      </details>
+    </details>
+  </main>
+
+  <footer class="foot">
+    <span data-i18n="foot.privacy">No upload, no tracking</span>
+  </footer>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

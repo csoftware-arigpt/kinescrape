@@ -1,0 +1,27 @@
+services:
+  kinescrape:
+    build: .
+    image: kinescrape:latest
+    ports:
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+    init: true
+    user: "10001:10001"
+    read_only: true
+    privileged: false
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m,mode=1777
+      - /run:rw,noexec,nosuid,nodev,size=8m,mode=0755
+    pids_limit: 256
+    mem_limit: 2g
+    cpus: 2
+    networks:
+      - kinescrape-isolated
+
+networks:
+  kinescrape-isolated:
+    driver: bridge
