@@ -1259,11 +1259,22 @@ def validate_http_url(url: str):
     return parsed
 
 
+ALLOWED_PROXY_HOST_EXACT = frozenset({"kinescope.io"})
+ALLOWED_PROXY_HOST_SUFFIXES = (".kinescope.io",)
+
+
 def is_kinescope_host(hostname: str | None) -> bool:
     if not hostname:
         return False
     host = hostname.lower().rstrip(".")
     return host == "kinescope.io" or host.endswith(".kinescope.io")
+
+
+def is_allowed_proxy_host(hostname: str | None) -> bool:
+    if not hostname:
+        return False
+    host = hostname.lower().rstrip(".")
+    return host in ALLOWED_PROXY_HOST_EXACT or host.endswith(ALLOWED_PROXY_HOST_SUFFIXES)
 
 
 def validate_public_http_url(url: str):
@@ -1274,6 +1285,9 @@ def validate_public_http_url(url: str):
 
     if hostname.lower() == "localhost" or hostname.lower().endswith(".localhost"):
         raise ApiError(HTTPStatus.BAD_REQUEST, "Localhost URLs are not allowed.")
+
+    if not is_allowed_proxy_host(hostname):
+        raise ApiError(HTTPStatus.BAD_REQUEST, "Upstream host is not on the allowlist.")
 
     try:
         port = parsed.port or (443 if parsed.scheme == "https" else 80)
@@ -1296,13 +1310,29 @@ def validate_public_http_url(url: str):
     return parsed
 
 
+def build_safe_proxy_url(parsed) -> str:
+    host = (parsed.hostname or "").lower().rstrip(".")
+    if host in ALLOWED_PROXY_HOST_EXACT:
+        safe_host = host
+    elif host.endswith(ALLOWED_PROXY_HOST_SUFFIXES):
+        safe_host = host
+    else:
+        raise ApiError(HTTPStatus.BAD_REQUEST, "Upstream host is not on the allowlist.")
+
+    scheme = "https" if parsed.scheme == "https" else "http"
+    path = parsed.path or "/"
+    query = f"?{parsed.query}" if parsed.query else ""
+    return f"{scheme}://{safe_host}{path}{query}"
+
+
 def request_public(method: str, url: str, **kwargs):
     current_url = url
     for _ in range(MAX_REDIRECTS + 1):
-        validate_public_http_url(current_url)
+        parsed = validate_public_http_url(current_url)
+        safe_url = build_safe_proxy_url(parsed)
         response = requests.request(
             method,
-            current_url,
+            safe_url,
             allow_redirects=False,
             **kwargs,
         )
@@ -1311,7 +1341,7 @@ def request_public(method: str, url: str, **kwargs):
             response.close()
             if not location:
                 raise ApiError(HTTPStatus.BAD_GATEWAY, "Upstream redirect did not include a location.")
-            current_url = urljoin(current_url, location)
+            current_url = urljoin(safe_url, location)
             continue
         return response
 
