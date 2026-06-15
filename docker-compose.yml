@@ -4,6 +4,9 @@ services:
     image: kinescrape:latest
     ports:
       - "127.0.0.1:8000:8000"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     restart: unless-stopped
     init: true
     user: "10001:10001"
