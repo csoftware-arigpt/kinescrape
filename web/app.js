@@ -987,7 +987,7 @@ async function discoverCandidates(source, referer) {
     const result = await postJson(API_ENDPOINTS.extract, { source, referer });
     const serverCandidates = normalizeCandidates(result.candidates || []);
     if (serverCandidates.length > 0) {
-      return serverCandidates;
+      return filterSourceSlug(serverCandidates, source);
     }
   } catch (error) {
     log(`Server extract fallback: ${error.message}`);
@@ -1002,13 +1002,34 @@ async function discoverCandidates(source, referer) {
     const html = await fetchText(source, referer);
     const remoteCandidates = extractCandidatesFromSource(html, source);
     if (remoteCandidates.length > 0) {
-      return remoteCandidates;
+      return filterSourceSlug(remoteCandidates, source);
     }
   }
 
   const videoId = await resolveVideoId(source, referer);
   return normalizeCandidates([{ videoId, label: videoId, source: "resolved" }]);
 }
+
+function filterSourceSlug(candidates, source) {
+  if (candidates.length <= 1 || !isHttpUrl(source)) {
+    return candidates;
+  }
+  try {
+    const url = new URL(source);
+    if (!isKinescopeHost(url.hostname)) {
+      return candidates;
+    }
+    const slug = inferVideoIdFromUrl(url);
+    if (!slug) {
+      return candidates;
+    }
+    const filtered = candidates.filter((c) => c.videoId !== slug);
+    return filtered.length > 0 ? filtered : candidates;
+  } catch {
+    return candidates;
+  }
+}
+
 
 function extractCandidatesFromSource(source, baseUrl = "") {
   const candidates = [];

@@ -932,7 +932,31 @@ def extract_candidates(source: str, referer: str) -> list[dict[str, str]]:
         except ApiError:
             pass
 
-    return normalize_candidates(candidates)
+    result = normalize_candidates(candidates)
+
+    # When we fetched a Kinescope share page, the slug from the URL may
+    # appear as a separate candidate alongside the real UUID video ID
+    # extracted from the page content. Drop the slug candidate so the UI
+    # does not show duplicates.
+    if fetch_page and is_http_url(source):
+        result = _filter_source_slug(result, source)
+
+    return result
+
+
+def _filter_source_slug(candidates: list[dict[str, str]], source_url: str) -> list[dict[str, str]]:
+    """Remove the share-page slug from candidates when real video IDs were found."""
+    if len(candidates) <= 1:
+        return candidates
+    parsed = urlparse(source_url)
+    if not is_kinescope_host(parsed.hostname):
+        return candidates
+    slug = infer_video_id_from_url(parsed)
+    if not slug:
+        return candidates
+    filtered = [c for c in candidates if c["videoId"] != slug]
+    return filtered if filtered else candidates
+
 
 
 def should_fetch_source_page(source: str) -> bool:
